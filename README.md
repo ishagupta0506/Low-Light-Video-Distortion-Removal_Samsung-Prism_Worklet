@@ -43,18 +43,17 @@
 8. [Model Description — Zero-DCE++](#8-model-description--zero-dce)
 9. [Temporal Smoothing](#9-temporal-smoothing)
 10. [Deployment Architecture](#10-deployment-architecture)
-11. [Quick Start](#11-quick-start)
-12. [Docker Deployment](#12-docker-deployment)
-13. [Inference Workflow](#13-inference-workflow)
-14. [Performance](#14-performance)
-15. [Model Selection & Evaluation](#15-model-selection--evaluation)
-16. [Results](#16-results)
-17. [Challenges & Engineering Decisions](#17-challenges--engineering-decisions)
-18. [Technologies Used](#18-technologies-used)
-19. [Future Work](#19-future-work)
-20. [My Contributions](#20-my-contributions)
-21. [Interview Highlights](#21-interview-highlights)
-22. [Repository Notice](#22-repository-notice)
+11. [Live Demo](#11-live-demo)
+12. [Inference Workflow](#12-inference-workflow)
+13. [Performance](#13-performance)
+14. [Model Selection & Evaluation](#14-model-selection--evaluation)
+15. [Results](#15-results)
+16. [Challenges & Engineering Decisions](#16-challenges--engineering-decisions)
+17. [Technologies Used](#17-technologies-used)
+18. [Future Work](#18-future-work)
+19. [My Contributions](#19-my-contributions)
+20. [Interview Highlights](#20-interview-highlights)
+21. [Repository Notice](#21-repository-notice)
 
 ---
 
@@ -282,91 +281,22 @@ flowchart TD
 
 ---
 
-## 11. Quick Start
+## 11. Live Demo
 
-### Prerequisites
+The complete end-to-end pipeline is deployed on Streamlit Community Cloud — no installation required:
 
-| Requirement | Version | Purpose |
-|---|---|---|
-| Python | ≥ 3.11 | Local deployment |
-| FFmpeg | Any recent | H.264 re-encoding for browser playback |
-| Docker | Any recent | Container deployment (optional) |
+**[https://low-light-video-distortion-removal.streamlit.app/](https://low-light-video-distortion-removal.streamlit.app/)**
 
-### Install Python dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-**Key packages:** `streamlit>=1.35`, `opencv-python-headless>=4.8`, `numpy>=1.24`, `onnxruntime>=1.17`
-
-> `opencv-python-headless` is used instead of `opencv-python` to avoid the `libGL.so.1` dependency absent in minimal Linux / Docker images.
-
-### Install FFmpeg
-
-```bash
-# Windows
-winget install ffmpeg
-
-# macOS
-brew install ffmpeg
-
-# Ubuntu / Debian / Docker
-sudo apt-get install -y ffmpeg
-```
-
-### Verify model files
-
-Both files must be in the same directory as `app.py`:
-
-```
-deployment/
-├── app.py
-├── zerodcepp.onnx          ← model graph
-└── zerodcepp.onnx.data     ← external weights (required)
-```
-
-### Run locally
-
-```bash
-streamlit run app.py
-```
-
-Open **http://localhost:8501**.
-
-> **No setup needed?** The app is live at: **[low-light-video-distortion-removal.streamlit.app](https://low-light-video-distortion-removal.streamlit.app/)**
+**Workflow:**
+1. Upload a low-light MP4 video (≤ 200 MB).
+2. Click **Enhance Video** — a real-time progress bar updates during processing.
+3. Three output tabs: **Input Video**, **Enhanced Output**, **Side-by-Side Comparison**.
+4. Download buttons for both the enhanced and comparison MP4s.
+5. Session History panel (sidebar) stores up to 5 past runs, fully reloadable.
 
 ---
 
-## 12. Docker Deployment
-
-```bash
-# Build
-docker build -t clearvision .
-
-# Run
-docker run -p 8501:8501 clearvision
-```
-
-Open **http://localhost:8501**.
-
-```bash
-# Run detached with auto-restart
-docker run -d --name clearvision-app --restart unless-stopped -p 8501:8501 clearvision
-
-# Check health
-docker inspect --format='{{.State.Health.Status}}' clearvision-app
-
-# Stream logs
-docker logs -f clearvision-app
-
-# Stop and remove
-docker stop clearvision-app && docker rm clearvision-app
-```
-
----
-
-## 13. Inference Workflow
+## 12. Inference Workflow
 
 Per-frame processing inside the enhancement loop:
 
@@ -399,7 +329,7 @@ flowchart TD
 
 ---
 
-## 14. Performance
+## 13. Performance
 
 ### Measured CPU Throughput (Intel Core, no GPU)
 
@@ -433,7 +363,7 @@ The deployment runs at **2.1 FPS at 1080p** on a standard CPU. The bottleneck is
 
 ---
 
-## 15. Model Selection & Evaluation
+## 14. Model Selection & Evaluation
 
 ### Benchmark Results — Project Evaluation
 
@@ -467,7 +397,7 @@ The deployment runs at **2.1 FPS at 1080p** on a standard CPU. The bottleneck is
 
 ---
 
-## 16. Results
+## 15. Results
 
 ### Sample Enhancement — Indoor Low-Light Scene
 
@@ -501,7 +431,7 @@ The definitive project results — each video shows original (left) and enhanced
 
 ---
 
-## 17. Challenges & Engineering Decisions
+## 16. Challenges & Engineering Decisions
 
 ### 1. Temporal Flickering
 
@@ -566,7 +496,7 @@ def pad_to_multiple(frame_rgb, factor=12):
 
 ---
 
-## 18. Technologies Used
+## 17. Technologies Used
 
 | Category | Technology | Version | Role |
 |---|---|---|---|
@@ -582,7 +512,7 @@ def pad_to_multiple(frame_rgb, factor=12):
 
 ---
 
-## 19. Future Work
+## 18. Future Work
 
 | Area | Proposed Enhancement | Impact |
 |---|---|---|
@@ -598,7 +528,7 @@ def pad_to_multiple(frame_rgb, factor=12):
 
 ---
 
-## 20. My Contributions
+## 19. My Contributions
 
 This project was completed as part of the Samsung PRISM research programme. Specific contributions:
 
@@ -615,7 +545,7 @@ This project was completed as part of the Samsung PRISM research programme. Spec
 
 ---
 
-## 21. Interview Highlights
+## 20. Interview Highlights
 
 ### Problem
 Low-light video suffers from noise, poor contrast, and temporal flickering. Classical methods do not jointly address all three. The constraint was CPU-only deployment with no GPU.
@@ -642,7 +572,7 @@ Containerised with Docker (`python:3.11-slim`). Critical fix: switched `opencv-p
 
 ---
 
-## 22. Repository Notice
+## 21. Repository Notice
 
 > **This repository is intended for educational and portfolio purposes.**
 > Proprietary Samsung PRISM assets and source code are not included.
