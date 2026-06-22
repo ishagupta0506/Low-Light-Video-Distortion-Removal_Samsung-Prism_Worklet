@@ -539,7 +539,7 @@ This project was completed as part of the Samsung PRISM research programme. Spec
 | **ONNX Runtime Integration** | `@st.cache_resource` session caching; `ORT_ENABLE_ALL` graph optimisation; multi-file validation with clear user-facing error messages |
 | **Temporal Smoothing** | Designed and implemented EMA layer; empirically tuned α/β (0.7/0.3) for optimal flicker suppression |
 | **Video Processing Pipeline** | End-to-end pipeline: extraction → preprocessing → inference → smoothing → dual-output writing; three-tier codec strategy for browser compatibility |
-| **Performance Profiling** | Identified ONNX inference as 88% of pipeline time; implemented UI throttling, pre-allocated comparison buffer, eliminated per-frame allocations |
+| **Runtime Analysis** | Evaluated processing time, FPS, and resolution-dependent performance to understand deployment trade-offs and identify future optimization opportunities |
 | **Streamlit Application** | Complete interactive UI: tabbed results, six-metric dashboard, interactive session history with full replay, robust error handling |
 | **Deployment Workflow** | Docker containerisation; resolved `opencv-python` libGL issue; health check, upload limits, FFmpeg H.264 pipeline |
 
