@@ -427,7 +427,7 @@ The definitive project results — each video shows original (left) and enhanced
 | `Run_10_11_comparison.mp4` | Fast motion with low-light degradation |
 | `Wave_22_35_comparison.mp4` | Subtle motion and texture recovery |
 
-> Output videos are not included in this public portfolio repository. A full end-to-end demonstration is available via the [Live Demo](https://low-light-video-distortion-removal.streamlit.app/).
+> Output videos are included in this public portfolio repository inside folder results_final_videos. A full end-to-end demonstration is available via the [Live Demo](https://low-light-video-distortion-removal.streamlit.app/).
 
 ---
 
