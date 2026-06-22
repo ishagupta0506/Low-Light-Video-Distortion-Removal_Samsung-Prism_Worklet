@@ -8,17 +8,16 @@
 
 ---
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![ONNX Runtime](https://img.shields.io/badge/ONNX%20Runtime-1.17+-7C3AED?style=for-the-badge&logo=onnx&logoColor=white)
-![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
-![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-Training-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![ONNX Runtime](https://img.shields.io/badge/ONNX_Runtime-Inference-7C3AED?style=for-the-badge&logo=onnx&logoColor=white)](https://onnxruntime.ai/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.35+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.8+-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
+[![Docker](https://img.shields.io/badge/Docker-Deployment-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Samsung PRISM](https://img.shields.io/badge/Samsung-PRISM-1428A0?style=for-the-badge&logo=samsung&logoColor=white)](https://www.samsungprism.com/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit%20Cloud-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://low-light-video-distortion-removal.streamlit.app/)
 
-![Samsung PRISM](https://img.shields.io/badge/Samsung%20PRISM-Research%20Project-1428A0?style=for-the-badge)
-![Status](https://img.shields.io/badge/Status-Deployed-22C55E?style=for-the-badge)
-![License](https://img.shields.io/badge/License-Portfolio%20Only-F59E0B?style=for-the-badge)
-
-**[Live Demo →](https://low-light-video-distortion-removal.streamlit.app)**
+**[Live Demo → low-light-video-distortion-removal.streamlit.app](https://low-light-video-distortion-removal.streamlit.app/)**
 
 </div>
 
@@ -34,70 +33,119 @@
 
 ## Table of Contents
 
-- [Problem Statement](#problem-statement)
-- [Key Features](#key-features)
-- [Project Architecture](#project-architecture)
-- [Model Selection & Evaluation](#model-selection--evaluation)
-- [Why Zero-DCE++](#why-zero-dce)
-- [Datasets](#datasets)
-- [Deployment Pipeline](#deployment-pipeline)
-- [Performance](#performance)
-- [Results](#results)
-- [Challenges & Engineering Decisions](#challenges--engineering-decisions)
-- [Future Work](#future-work)
-- [My Contributions](#my-contributions)
-- [Interview Highlights](#interview-highlights)
-- [Repository Notice](#repository-notice-1)
+1. [Project Overview](#1-project-overview)
+2. [Problem Statement](#2-problem-statement)
+3. [Objectives](#3-objectives)
+4. [Key Features](#4-key-features)
+5. [Datasets](#5-datasets)
+6. [System Architecture](#6-system-architecture)
+7. [Processing Pipeline](#7-processing-pipeline)
+8. [Model Description — Zero-DCE++](#8-model-description--zero-dce)
+9. [Temporal Smoothing](#9-temporal-smoothing)
+10. [Deployment Architecture](#10-deployment-architecture)
+11. [Quick Start](#11-quick-start)
+12. [Docker Deployment](#12-docker-deployment)
+13. [Inference Workflow](#13-inference-workflow)
+14. [Performance](#14-performance)
+15. [Model Selection & Evaluation](#15-model-selection--evaluation)
+16. [Results](#16-results)
+17. [Challenges & Engineering Decisions](#17-challenges--engineering-decisions)
+18. [Technologies Used](#18-technologies-used)
+19. [Future Work](#19-future-work)
+20. [My Contributions](#20-my-contributions)
+21. [Interview Highlights](#21-interview-highlights)
+22. [Repository Notice](#22-repository-notice)
 
 ---
 
-## Problem Statement
+## 1. Project Overview
+
+**ClearVision** is a Samsung PRISM research project that addresses video quality degradation in low-light environments. The system implements an end-to-end pipeline — from model training in PyTorch to production-grade inference via ONNX Runtime — wrapped in an interactive Streamlit web interface deployed on Streamlit Community Cloud.
+
+The core enhancement engine is **Zero-DCE++** (Zero-Reference Deep Curve Estimation), a lightweight unsupervised model that enhances illumination through learned higher-order curves applied iteratively to each frame. Temporal flickering — an artifact not addressed by the base model — is suppressed by an Exponential Moving Average post-processing layer designed and tuned as part of this project.
+
+> **Programme:** Samsung Research Institute Bangalore (SRIB) — PRISM (Pro-Bono Research and Innovation for Samsung Mentorship)
+
+---
+
+## 2. Problem Statement
 
 Low-light video capture is a fundamental challenge in computer vision, surveillance, autonomous driving, and mobile photography. Videos captured under poor illumination suffer from a cascade of degradation effects that severely reduce their utility:
 
 | Degradation | Description |
 |---|---|
-| **Poor Illumination** | Insufficient photon capture leads to underexposed frames where scene content is invisible |
-| **High Noise** | Low signal-to-noise ratio at high ISO settings introduces visual grain and colour artifacts |
-| **Contrast Loss** | Compressed dynamic range flattens scene structure, reducing edge and texture visibility |
-| **Temporal Flickering** | Frame-independent enhancement without temporal awareness produces inconsistent brightness across successive frames, causing a perceptible flicker artifact |
-| **Colour Distortion** | White balance and colour temperature errors under artificial lighting corrupt scene colour fidelity |
+| **Insufficient Illumination** | Scenes appear dark; fine details are indistinguishable |
+| **Reduced Contrast** | Colour channels compress, flattening visual depth |
+| **Temporal Flickering** | Per-frame processing introduces brightness inconsistency across adjacent frames |
+| **Noise Amplification** | Low-light conditions elevate sensor noise and grain |
+| **Colour Distortion** | White balance errors under artificial or absent light |
 
-Classical approaches — histogram equalisation, gamma correction, Retinex-based methods — address illumination in isolation without joint learning of noise, contrast, and temporal structure. Deep learning methods enable joint optimisation across all degradation dimensions simultaneously.
-
-ClearVision addresses this problem end-to-end: from raw video input through per-frame neural enhancement and temporally-smoothed reconstruction to a deployable web interface.
+Classical approaches — histogram equalisation, gamma correction, Retinex-based methods — address illumination in isolation without joint learning of noise, contrast, and temporal structure. Zero-reference deep learning overcomes this by learning adaptive, content-aware strategies without paired training data.
 
 ---
 
-## Key Features
+## 3. Objectives
 
-- **Low-Light Video Enhancement** — Per-frame enhancement using Zero-DCE++ deep curve estimation, restoring visibility and contrast without paired training data
-- **Temporal Smoothing** — Exponential moving average across frames eliminates inter-frame flickering; `smoothed = 0.7 × current + 0.3 × previous`
-- **ONNX Runtime Inference** — Framework-agnostic deployment; PyTorch weights exported to ONNX for dependency-free inference on CPU
-- **Streamlit Web Interface** — Interactive upload, real-time progress tracking, tabbed result viewer, metrics dashboard, and session history
-- **Side-by-Side Comparison** — Automatically generated comparison video with original (left) and enhanced (right) for objective evaluation
-- **Docker Deployment** — Containerised with `python:3.11-slim`, health check, and browser-compatible H.264 output via `ffmpeg`
-- **Session History** — In-session history with full replay of previous enhancement results, stored in Streamlit session state
+- Train a Zero-DCE++ model for content-aware, parameter-efficient low-light enhancement.
+- Deploy via ONNX Runtime for CPU inference without a GPU requirement.
+- Apply temporal smoothing to suppress inter-frame flickering in enhanced video output.
+- Generate enhanced and side-by-side comparison videos for objective evaluation.
+- Provide a web application interface deployable both via Docker and Streamlit Community Cloud.
+- Evaluate Zero-DCE++ against five competing methods (Zero-DCE, RUAS, SCI, PSENet, URetinex-Net) using PSNR, SSIM, LPIPS, and Temporal Consistency.
 
 ---
 
-## Project Architecture
+## 4. Key Features
 
-![Architecture Diagram](assets/architecture.png)
+| Feature | Description |
+|---|---|
+| **Zero-DCE++ Enhancement** | Unsupervised illumination enhancement via learned higher-order curves — no paired data required |
+| **ONNX Runtime Inference** | CPU-optimised, cross-platform — no GPU required |
+| **Temporal Smoothing** | EMA blend of consecutive frames suppresses inter-frame flickering |
+| **Side-by-Side Comparison** | Auto-generated comparison video (original left, enhanced right) |
+| **Session History** | Stores up to 5 past sessions with metrics, fully reloadable in-app |
+| **Streamlit Web Interface** | Interactive browser-based UI with progress tracking and tabbed results |
+| **Docker Deployment** | Single-command containerised deployment with health check |
+| **FFmpeg H.264 Re-encoding** | Automatic re-encode for broad browser playback compatibility |
+| **Frame Padding** | Automatic zero-padding to satisfy the model's stride-12 spatial constraint |
+
+---
+
+## 5. Datasets
+
+Two publicly available datasets were used as primary sources for training and evaluation:
+
+| Dataset | Description | Source |
+|---|---|---|
+| **ARID v1.5** | Action Recognition in the Dark — 3,784 real low-light video clips across 11 action categories, captured in genuinely dark environments | [Kaggle](https://www.kaggle.com/datasets/uom200682t/arid-v15) |
+| **SDSD / Low-Light Video Dataset** | Paired low-light and normal-light video sequences for enhancement benchmarking; temporally aligned pairs enable PSNR/SSIM computation over time | [Kaggle](https://www.kaggle.com/datasets/c00dbddeb80582e1b044807ec50381ef2e3c0ed4c7e08faeed25dcefafa5ac71) |
+
+ARID videos were used to assess temporal consistency and visual quality on naturalistic motion. The SDSD paired sequences enabled frame-level PSNR and SSIM evaluation of both the base enhancement and the EMA temporal smoothing layer.
+
+---
+
+## 6. System Architecture
+
+![ClearVision System Architecture](assets/architecture.png)
 
 ```mermaid
 flowchart TD
-    A([Input MP4 Video]) --> B[Frame Extraction\nOpenCV VideoCapture]
-    B --> C[Frame Preprocessing\nPad H W to multiples of 12\nNormalise to 0–1 float32]
-    C --> D[Zero-DCE++ Inference\nONNX Runtime CPUExecutionProvider\nInput  1 × 3 × H × W\nOutput 1 × 3 × H × W]
-    D --> E[Temporal Smoothing\n0.7 × current + 0.3 × previous\nEliminates inter-frame flicker]
-    E --> F[Video Reconstruction\nOpenCV VideoWriter\nH.264 ffmpeg re-encode]
-    F --> G[Streamlit Interface\nTabbed viewer — Input Enhanced Comparison\nMetrics dashboard — Download — History]
+    A([Low-Light Input Video]) --> B[Frame Extraction and Decoding\nOpenCV VideoCapture]
+    B --> C[Preprocessing\nBGR to RGB · Normalise /255 · Pad to ×12]
+    C --> D[Zero-DCE++ Inference\nONNX Runtime · CPUExecutionProvider]
+    D --> E[Temporal Smoothing\n0.7 × current + 0.3 × previous]
+    E --> F[Enhanced Frame Reconstruction\nFloat32 RGB → uint8 BGR]
+    F --> G{Output Generation}
+    G --> H([Enhanced Video])
+    G --> I([Side-by-Side Comparison])
+    H --> J[FFmpeg H.264 Re-encode]
+    I --> J
+    J --> K([Streamlit Interface\nPreview · Download · Session History])
 
     style A fill:#1464A0,color:#fff,stroke:#0f4f8a
     style D fill:#7C3AED,color:#fff,stroke:#5b21b6
     style E fill:#059669,color:#fff,stroke:#047857
-    style G fill:#DC2626,color:#fff,stroke:#b91c1c
+    style K fill:#DC2626,color:#fff,stroke:#b91c1c
 ```
 
 ### Component Breakdown
@@ -114,94 +162,86 @@ flowchart TD
 
 ---
 
-## Model Selection & Evaluation
+## 7. Processing Pipeline
 
-### Benchmark Comparison — Project Evaluation Results
+Each frame passes through five sequential stages:
 
-Metrics measured on the project evaluation set. Higher PSNR/SSIM is better. Lower LPIPS and lower Temporal Consistency score indicate better perceptual quality and less inter-frame flickering.
+| Stage | Operation | Detail |
+|---|---|---|
+| 1 | Frame Read | `cv2.VideoCapture.read()` |
+| 2 | Preprocessing | BGR → RGB, ÷255.0, pad H/W to multiple of 12, HWC → NCHW |
+| 3 | Inference | ONNX Runtime `CPUExecutionProvider`, output index 0 only |
+| 4 | Temporal Smoothing | `0.7 × F_t + 0.3 × F_{t-1}` (EMA) |
+| 5 | Output Generation | Float32 RGB → uint8 BGR → VideoWriter; FFmpeg re-encode runs once post-loop |
 
-![Evaluation Metrics](assets/evaluation_metrics.png)
-
-| Model | Avg PSNR (dB) ↑ | Avg SSIM ↑ | Avg LPIPS ↓ | Temporal Consistency ↓ | Inference Speed |
-|---|---|---|---|---|---|
-| Zero-DCE | 10.56 | 0.4887 | 0.2947 | 0.016 | Medium |
-| **Zero-DCE++** | **15.95** | **0.5318** | **0.3181** | **0.028** | **Fast** |
-| RUAS | 11.87 | 0.4973 | 0.3227 | 0.021 | Fast |
-| SCI | 13.16 | 0.4548 | 0.5052 | 7.08 | Fast |
-| PSENet | 13.48 | 0.4259 | 0.5309 | 8.80 | Medium |
-| URetinex-Net | 14.27 | 0.5575 | 0.4153 | 5.13 | Slow |
-
-> Evaluation metrics: **PSNR** — pixel-level enhancement fidelity · **SSIM** — structural and luminance similarity · **LPIPS** — perceptual visual quality · **Temporal Consistency** — video stability and flicker (variance across frames, lower = more stable)
-
-### Selection Rationale
-
-Zero-DCE++ was selected based on the project's evaluation results:
-
-1. **Best PSNR** — Achieved the highest average PSNR (15.95 dB) among all six evaluated models, outperforming URetinex-Net (14.27 dB) by +1.68 dB in this evaluation
-2. **Excellent temporal stability** — Temporal consistency score of 0.028 is the closest to Zero-DCE (0.016) and far better than SCI (7.08), PSENet (8.80), and URetinex-Net (5.13)
-3. **Fastest deployable model with competitive quality** — Runs at fast inference speed while matching or exceeding the quality of slower models
-4. **Zero-reference learning** — No paired training data required; generalises to unseen conditions without retraining
-5. **Parameter efficiency** — ~10,561 parameters (~41 KB ONNX model) vs URetinex-Net's much larger footprint, making it trivially deployable on CPU
+The comparison output buffer is pre-allocated once before the frame loop (`np.empty`) — no per-frame allocation. Streamlit UI updates are throttled to once per second to minimise overhead. Per-stage profiling (extraction, inference, smoothing, write, UI) is recorded and displayed in the app metrics dashboard.
 
 ---
 
-## Why Zero-DCE++
+## 8. Model Description — Zero-DCE++
 
-### Zero-Reference Learning
+**Zero-DCE++** (Zero-Reference Deep Curve Estimation, improved) is an unsupervised CNN proposed by Li et al. (IEEE TPAMI 2021) that requires no paired training data. It maps input pixels to enhanced outputs through learned **Light Enhancement Curves (LE-curves)**:
 
-Zero-DCE++ is trained entirely without reference images. It learns light-enhancement curves directly from non-reference loss functions:
+$$\hat{I} = I + \alpha \cdot I \cdot (1 - I)$$
 
-- **Spatial consistency loss** — Preserves local spatial relationships
-- **Exposure control loss** — Regulates overall exposure level
-- **Colour constancy loss** — Maintains consistent white balance
-- **Illumination smoothness loss** — Ensures smooth curve parameters
+Applied iteratively eight times, this captures complex non-linear illumination adjustments from a single lightweight forward pass.
 
-This makes it dataset-agnostic and broadly generalisable to any low-light scenario.
+> **Reference:** Li, C., Guo, C., & Loy, C. C. (2021). *Learning to Enhance Low-Light Image via Zero-Reference Deep Curve Estimation.* IEEE Transactions on Pattern Analysis and Machine Intelligence. [doi:10.1109/TPAMI.2021.3063604](https://doi.org/10.1109/TPAMI.2021.3063604)
+> Official implementation: [github.com/Li-Chongyi/Zero-DCE_extension](https://github.com/Li-Chongyi/Zero-DCE_extension)
 
-### Architecture Insight
+| Property | Value |
+|---|---|
+| **Training Paradigm** | Unsupervised / Zero-Reference |
+| **Architecture** | 7 Depthwise Separable Conv layers (CSDN blocks), 32 channels |
+| **Parameters** | ~10,561 (~41 KB weights) |
+| **Input / Output** | RGB float32 normalised [0, 1] — same spatial resolution |
+| **Stride Constraint** | H and W must be multiples of 12 |
+| **ONNX Tensor Layout** | NCHW — `(1, 3, H_padded, W_padded)` float32 |
+| **Deployment Format** | External ONNX data — `zerodcepp.onnx` + `zerodcepp.onnx.data` |
+| **Session Caching** | `@st.cache_resource`, `ORT_ENABLE_ALL` graph optimisation |
 
-The model uses **Depthwise Separable Convolutions (CSDN blocks)** throughout, dramatically reducing parameter count versus standard convolutions:
+### Why So Small? Depthwise Separable Convolutions
+
+The model uses **CSDN blocks** throughout, dramatically reducing parameter count:
 
 ```
-Standard Conv (32→32, 3×3):   32 × 32 × 3 × 3 = 9,216 params
-Depthwise Sep  (32→32, 3×3):  (32×1×3×3) + (32×32×1×1) = 288 + 1,024 = 1,312 params
+Standard Conv  (32→32, 3×3):   32 × 32 × 3 × 3  = 9,216 params
+Depthwise Sep  (32→32, 3×3):   (32×1×3×3) + (32×32×1×1) = 1,312 params
                                                            → 7× fewer parameters
 ```
 
-Seven CSDN layers produce a set of pixel-wise curve parameters `x_r` which are applied iteratively eight times in the `enhance()` function — achieving compound enhancement from minimal learned weights.
-
-### Trade-offs
-
-| Advantage | Limitation |
-|---|---|
-| No paired training data needed | No explicit noise modelling |
-| Highest PSNR in project evaluation (15.95 dB) | Temporal flickering requires external EMA post-processing |
-| 10K params → 41 KB model file | Fixed curve estimation may over-enhance already-bright regions |
-| CPU-deployable at competitive speed | SSIM (0.5318) lower than URetinex-Net (0.5575) |
+Seven CSDN layers produce pixel-wise curve parameters `x_r`, applied iteratively eight times in the `enhance()` function — achieving compound enhancement from a 41 KB model.
 
 ---
 
-## Datasets
+## 9. Temporal Smoothing
 
-### ARID (Action Recognition In the Dark)
+Per-frame processing causes brightness flickering because adjacent frames with similar scene content can receive different enhancement curve parameters. ClearVision suppresses this with an **Exponential Moving Average (EMA)**:
 
-ARID is a video dataset specifically designed for action recognition under extremely dark conditions. It contains 3,784 video clips across 11 action categories captured in real-world low-light environments. In this project, ARID videos were used as evaluation material to assess temporal consistency and visual quality of the enhancement pipeline on naturalistic motion.
+$$F_t^{smoothed} = 0.7 \times F_t^{enhanced} + 0.3 \times F_{t-1}^{smoothed}$$
 
-### SDSD (Seeing Dynamic Scenes in the Dark)
+```python
+if prev_smoothed is None:
+    smoothed = enhanced
+else:
+    smoothed = 0.7 * enhanced + 0.3 * prev_smoothed
 
-SDSD is a paired video dataset containing 80 outdoor and 70 indoor dynamic video sequences, each with a corresponding well-exposed reference. The dataset is unique in providing temporally aligned low-light / normal-light video pairs, enabling PSNR and SSIM computation over time rather than single frames. SDSD was used to evaluate the effectiveness of the EMA temporal smoothing layer in reducing frame-to-frame variance.
+prev_smoothed = smoothed.copy()
+```
+
+The α = 0.7 / β = 0.3 split was determined empirically. Higher β (e.g. 0.5) over-smooths during genuine scene illumination changes; lower β (e.g. 0.1) is insufficient to eliminate flickering. The first frame is initialised as its own enhanced output.
 
 ---
 
-## Deployment Pipeline
+## 10. Deployment Architecture
 
 ```mermaid
 flowchart LR
-    A([PyTorch\nEpoch99.pth]) -->|torch.onnx.export\nopset 17\ndynamic axes| B([ONNX Model\nzerodcepp.onnx\nzerodcepp.onnx.data])
+    A([PyTorch\nEpoch99.pth]) -->|torch.onnx.export\nopset 17 · dynamic axes| B([zerodcepp.onnx\n+ zerodcepp.onnx.data])
     B -->|ort.InferenceSession\nCPUExecutionProvider| C([ONNX Runtime\nInference])
-    C -->|Streamlit\nst.cache_resource| D([Streamlit App\napp.py])
-    D -->|Docker\npython:3.11-slim| E([Container\nport 8501])
-    E -->|docker run -p 8501:8501| F([Live Deployment\nstreamlit.app / localhost:8501])
+    C -->|st.cache_resource| D([Streamlit App\napp.py])
+    D -->|python:3.11-slim| E([Docker Container\nport 8501])
+    E -->|docker run -p 8501:8501| F([Deployment\nstreamlit.app / localhost:8501])
 
     style A fill:#EE4C2C,color:#fff
     style B fill:#7C3AED,color:#fff
@@ -211,145 +251,294 @@ flowchart LR
     style F fill:#22C55E,color:#fff
 ```
 
-### Export Details
+```mermaid
+flowchart TD
+    subgraph Docker ["Docker Container — python:3.11-slim"]
+        A[app.py\nStreamlit Application] --> B[ONNX Runtime\nCPUExecutionProvider]
+        B --> C[zerodcepp.onnx\nzerodcepp.onnx.data]
+        A --> D[FFmpeg H.264 Re-encode]
+    end
+    U([User Browser]) -->|HTTP :8501| A
+    A -->|MP4 Download| U
+```
+
+| Setting | Value |
+|---|---|
+| Base image | `python:3.11-slim` (Debian) |
+| Max upload size | 200 MB |
+| Server port | 8501 |
+| Health endpoint | `/_stcore/health` — every 30 s, 20 s start grace, 10 s timeout |
+| OpenCV package | `opencv-python-headless` (no `libGL.so.1` dependency) |
+
+### ONNX Export Details
 
 | Step | Detail |
 |---|---|
 | Framework | PyTorch → ONNX opset 17 |
-| Dynamic axes | Batch, Height, Width (variable resolution support) |
-| Weight storage | External data file (`zerodcepp.onnx.data`) auto-resolved by ONNX Runtime |
-| Constant folding | Enabled — redundant nodes eliminated at export time |
-| Provider | `CPUExecutionProvider` with full graph optimisation |
-| Session caching | `@st.cache_resource` — session created once per server lifetime |
-
-### Docker Configuration
-
-```dockerfile
-FROM python:3.11-slim
-# ffmpeg (H.264 re-encode) + curl (health check)
-# pip install opencv-python-headless  ← headless: no libGL.so.1 dependency
-EXPOSE 8501
-HEALTHCHECK CMD curl -f http://localhost:8501/_stcore/health
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
-```
-
-> `opencv-python-headless` is used instead of `opencv-python` because `python:3.11-slim` does not ship `libGL.so.1`. All video processing functions (`VideoCapture`, `VideoWriter`, `cvtColor`) are available in the headless build.
+| Dynamic axes | Batch, Height, Width (variable resolution) |
+| Weight storage | External data file auto-resolved by ONNX Runtime |
+| Constant folding | Enabled — redundant nodes eliminated at export |
+| Session caching | `@st.cache_resource` — one session per server lifetime |
 
 ---
 
-## Performance
+## 11. Quick Start
 
-### Measured Results (CPU — Intel Core, no GPU)
+### Prerequisites
 
-| Resolution | Frames | Processing Time | Throughput | Peak RAM |
+| Requirement | Version | Purpose |
+|---|---|---|
+| Python | ≥ 3.11 | Local deployment |
+| FFmpeg | Any recent | H.264 re-encoding for browser playback |
+| Docker | Any recent | Container deployment (optional) |
+
+### Install Python dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+**Key packages:** `streamlit>=1.35`, `opencv-python-headless>=4.8`, `numpy>=1.24`, `onnxruntime>=1.17`
+
+> `opencv-python-headless` is used instead of `opencv-python` to avoid the `libGL.so.1` dependency absent in minimal Linux / Docker images.
+
+### Install FFmpeg
+
+```bash
+# Windows
+winget install ffmpeg
+
+# macOS
+brew install ffmpeg
+
+# Ubuntu / Debian / Docker
+sudo apt-get install -y ffmpeg
+```
+
+### Verify model files
+
+Both files must be in the same directory as `app.py`:
+
+```
+deployment/
+├── app.py
+├── zerodcepp.onnx          ← model graph
+└── zerodcepp.onnx.data     ← external weights (required)
+```
+
+### Run locally
+
+```bash
+streamlit run app.py
+```
+
+Open **http://localhost:8501**.
+
+> **No setup needed?** The app is live at: **[low-light-video-distortion-removal.streamlit.app](https://low-light-video-distortion-removal.streamlit.app/)**
+
+---
+
+## 12. Docker Deployment
+
+```bash
+# Build
+docker build -t clearvision .
+
+# Run
+docker run -p 8501:8501 clearvision
+```
+
+Open **http://localhost:8501**.
+
+```bash
+# Run detached with auto-restart
+docker run -d --name clearvision-app --restart unless-stopped -p 8501:8501 clearvision
+
+# Check health
+docker inspect --format='{{.State.Health.Status}}' clearvision-app
+
+# Stream logs
+docker logs -f clearvision-app
+
+# Stop and remove
+docker stop clearvision-app && docker rm clearvision-app
+```
+
+---
+
+## 13. Inference Workflow
+
+Per-frame processing inside the enhancement loop:
+
+```mermaid
+flowchart TD
+    A([BGR uint8 Frame]) --> B[BGR → RGB]
+    B --> C[Normalise ÷ 255 to float32]
+    C --> D{H and W\nmultiples of 12?}
+    D -- No --> E[Zero-Pad]
+    D -- Yes --> F[HWC → NCHW]
+    E --> F
+    F --> G[ONNX Runtime Inference\noutput index 0]
+    G --> H[NCHW → HWC · clip 0–1]
+    H --> I[Crop to original H × W]
+    I --> J[Temporal Smoothing\n0.7 × current + 0.3 × previous]
+    J --> K[Float32 RGB → uint8 BGR]
+    K --> L([VideoWriter])
+
+    style A fill:#1464A0,color:#fff
+    style G fill:#7C3AED,color:#fff
+    style J fill:#059669,color:#fff
+    style L fill:#DC2626,color:#fff
+```
+
+**Optimisations applied:**
+- ONNX session created **once** via `@st.cache_resource`, reused for all frames
+- Comparison frame buffer **pre-allocated** before the loop — no per-frame `np.hstack`
+- Streamlit UI updates **throttled** to once per second
+- Zero-padding computed once per video (constant H × W), not per frame
+
+---
+
+## 14. Performance
+
+### Measured CPU Throughput (Intel Core, no GPU)
+
+| Resolution | Frames | Processing Time | Throughput | Peak Frame RAM |
 |---|---|---|---|---|
-| 320 × 240 | 300 | ~20 s | ~15 FPS | ~6 MB/frame |
-| 1280 × 720 | 300 | ~90 s | ~3.3 FPS | ~56 MB/frame |
-| 1920 × 1080 | 398 | ~191 s | **2.1 FPS** | ~166 MB/frame |
-| 3840 × 2160 | — | ~12 min/30s | ~0.5 FPS | ~665 MB/frame |
+| 320 × 240 | 300 | ~20 s | ~15 FPS | ~6 MB |
+| 1280 × 720 | 300 | ~90 s | ~3.3 FPS | ~56 MB |
+| 1920 × 1080 | 398 | **~191 s** | **2.1 FPS** | ~166 MB |
+| 3840 × 2160 | — | ~12 min / 30 s | ~0.5 FPS | ~665 MB |
 
-### Bottleneck Analysis
+### Per-Stage Bottleneck Analysis
 
 | Stage | Time Share | Notes |
 |---|---|---|
-| ONNX Inference | **~88%** | Dominant cost; irreducible on CPU |
+| **ONNX Inference** | **~88%** | Dominant cost; irreducible on CPU |
 | Video Writing | ~6% | `cv2.VideoWriter` synchronous I/O |
-| Temporal Smoothing | ~2% | NumPy EMA — negligible |
 | Frame Extraction | ~2% | `cv2.VideoCapture` — fast |
-| UI Updates | ~2% | Throttled to 1 update/second |
+| Temporal Smoothing | ~2% | NumPy EMA — negligible |
+| UI Updates | ~2% | Throttled to 1 update / second |
 
 ### Real-Time Limitations
 
-The current deployment runs at **2.1 FPS at 1080p** on a standard CPU. This is not real-time (24–30 FPS is the threshold). The bottleneck is ONNX Runtime CPU inference, which processes one frame at a time through 7 CSDN layers + 8 curve application iterations.
-
-### Future: TensorRT Optimisation
-
-Switching from `CPUExecutionProvider` to `TensorrtExecutionProvider` or `CUDAExecutionProvider` is a **one-line change** in the inference session initialisation. Expected speedups on consumer GPU hardware:
+The deployment runs at **2.1 FPS at 1080p** on a standard CPU. The bottleneck is ONNX Runtime CPU inference through 7 CSDN layers + 8 curve iterations. Switching to `CUDAExecutionProvider` or `TensorrtExecutionProvider` is a **one-line change**:
 
 | Provider | Expected FPS (1080p) | Speedup |
 |---|---|---|
-| CPU (current) | 2.1 | 1× |
-| CUDA (fp32) | ~25–35 | ~12–17× |
-| TensorRT (fp16) | ~50–80 | ~25–40× |
+| CPU — current | 2.1 | 1× |
+| CUDA fp32 | ~25–35 | ~12–17× |
+| TensorRT fp16 | ~50–80 | ~25–40× |
 | TensorRT INT8 | ~80–120 | ~40–60× |
 
 ---
 
-## Results
+## 15. Model Selection & Evaluation
+
+### Benchmark Results — Project Evaluation
+
+![Evaluation Metrics](assets/evaluation_metrics.png)
+
+| Model | PSNR (dB) ↑ | SSIM ↑ | LPIPS ↓ | Temporal Consistency ↓ | CPU Speed |
+|---|---|---|---|---|---|
+| Zero-DCE | 10.56 | 0.4887 | 0.2947 | 0.016 | Medium |
+| **Zero-DCE++** | **15.95** | **0.5318** | **0.3181** | **0.028** | **Fast** |
+| RUAS | 11.87 | 0.4973 | 0.3227 | 0.021 | Fast |
+| SCI | 13.16 | 0.4548 | 0.5052 | 7.08 | Fast |
+| PSENet | 13.48 | 0.4259 | 0.5309 | 8.80 | Medium |
+| URetinex-Net | 14.27 | 0.5575 | 0.4153 | 5.13 | Slow |
+
+> **Metrics:** PSNR — pixel-level fidelity · SSIM — structural and luminance similarity · LPIPS — perceptual visual quality · Temporal Consistency — inter-frame variance (lower = more stable video)
+
+### Why Zero-DCE++ Was Selected
+
+1. **Best PSNR in evaluation** — 15.95 dB, outperforming URetinex-Net (14.27 dB) and all others
+2. **Excellent temporal stability** — Score of 0.028; far better than SCI (7.08), PSENet (8.80), URetinex-Net (5.13)
+3. **Fastest deployable model with competitive quality** — Fast inference on CPU, unlike Slow-rated URetinex-Net
+4. **Zero-reference learning** — No paired training data; generalises to unseen conditions
+5. **Extreme parameter efficiency** — ~10,561 parameters, 41 KB ONNX model; trivially portable
+
+| Advantage | Limitation |
+|---|---|
+| Highest PSNR in project evaluation (15.95 dB) | No explicit noise modelling |
+| Excellent temporal stability score (0.028) | Temporal flickering requires external EMA post-processing |
+| 10K params → 41 KB model — CPU-deployable | SSIM (0.5318) lower than URetinex-Net (0.5575) |
+| No paired training data needed | Fixed curve estimation may over-enhance already-bright regions |
+
+---
+
+## 16. Results
 
 ### Sample Enhancement — Indoor Low-Light Scene
 
 Top: original low-light input frame. Bottom: Zero-DCE++ enhanced output with temporal smoothing applied.
 
-![Sample Enhancement — Person](assets/sample_person.png)
+![Sample Enhancement](assets/sample_person.png)
 
 ---
 
 ### Side-by-Side Comparison — Outdoor Scene
 
-Left: original low-light frame. Right: Zero-DCE++ enhanced output. Restored detail, contrast, and colour fidelity are visible across the scene.
+Left: original low-light frame. Right: Zero-DCE++ enhanced. Restored detail, contrast, and colour fidelity are visible across the scene.
 
-![Side-by-Side Comparison — Outdoor](assets/sample_outdoor.png)
-
----
-
-### Live Demo
-
-The full end-to-end pipeline — upload, enhance, compare, download — is available at:
-
-**[https://low-light-video-distortion-removal.streamlit.app](https://low-light-video-distortion-removal.streamlit.app)**
+![Side-by-Side Comparison](assets/sample_outdoor.png)
 
 ---
 
-## Challenges & Engineering Decisions
+### Final Evaluated Output Videos
+
+The definitive project results — each video shows original (left) and enhanced (right) at native resolution:
+
+| File | Scene |
+|---|---|
+| `Drink_1_3_comparison.mp4` | Indoor low-light drinking scene |
+| `Jump_6_4_comparison.mp4` | Dynamic motion under poor illumination |
+| `Pick_10_11_comparison.mp4` | Object interaction in a dark environment |
+| `Run_10_11_comparison.mp4` | Fast motion with low-light degradation |
+| `Wave_22_35_comparison.mp4` | Subtle motion and texture recovery |
+
+> Output videos are not included in this public portfolio repository. A full end-to-end demonstration is available via the [Live Demo](https://low-light-video-distortion-removal.streamlit.app/).
+
+---
+
+## 17. Challenges & Engineering Decisions
 
 ### 1. Temporal Flickering
 
-**Problem:** Zero-DCE++ operates independently on each frame. Adjacent frames with similar scene content can receive different enhancement curve parameters, producing perceptible brightness oscillation (flickering) in the output video.
+**Problem:** Zero-DCE++ operates independently on each frame. Adjacent frames receive different curve parameters, producing brightness oscillation.
 
-**Solution:** Exponential Moving Average (EMA) smoothing applied in the post-processing layer:
-
-```
-if prev_smoothed is None:
-    smoothed = enhanced
-else:
-    smoothed = 0.7 × enhanced + 0.3 × prev_smoothed
-
-prev_smoothed = smoothed.copy()
-```
-
-The α = 0.7 / β = 0.3 split was determined empirically to balance responsiveness to genuine scene illumination changes against suppression of frame-to-frame enhancement variance. Higher β (e.g. 0.5) over-smooths during scene transitions; lower β (e.g. 0.1) is insufficient to eliminate flickering.
+**Solution:** EMA post-processing with α = 0.7 / β = 0.3 tuned empirically. Higher β (0.5) over-smooths scene transitions; lower β (0.1) is insufficient.
 
 ---
 
-### 2. ONNX Model with External Data
+### 2. ONNX External Data File
 
-**Problem:** PyTorch's `torch.onnx.export` automatically externalises model weights into a separate `.onnx.data` file when the model exceeds a certain size threshold. The initial deployment had the `.onnx.data` file missing, causing ONNX Runtime to raise:
+**Problem:** `torch.onnx.export` automatically externalises weights into `zerodcepp.onnx.data`. Initial deployment had this file missing, causing ONNX Runtime to raise:
 
 ```
 External data path does not exist: "zerodcepp.onnx.data"
 ```
 
-**Solution:** Both `zerodcepp.onnx` (graph structure, ~62 KB) and `zerodcepp.onnx.data` (weight tensors, ~40 KB) must be co-located. ONNX Runtime resolves the weight path relative to the `.onnx` file. The `load_session()` function in `app.py` explicitly validates both files before attempting to create the inference session, providing a clear error message if either is missing.
+**Solution:** `load_session()` validates both files at startup and raises a clear `st.error` + `st.stop()` if either is absent. Both files must be co-located alongside `app.py`.
 
 ---
 
 ### 3. Browser Video Compatibility
 
-**Problem:** OpenCV's default `mp4v` codec (MPEG-4 Part 2) is not supported by modern browsers for inline `<video>` playback. Streamlit's `st.video()` depends on browser-native video decoding, so `mp4v` output could be downloaded but not previewed in the interface.
+**Problem:** OpenCV's default `mp4v` codec (MPEG-4 Part 2) is unsupported by modern browsers for inline `<video>` playback.
 
 **Solution:** Three-tier codec strategy:
-1. **Primary:** Attempt `avc1` (H.264) codec directly in `cv2.VideoWriter`
-2. **Fallback:** If `avc1` unavailable, use `mp4v`
-3. **Post-processing:** If `ffmpeg` is installed (`shutil.which("ffmpeg")`), re-encode to H.264 with `yuv420p` pixel format and `+faststart` flag for browser streaming
+1. **Primary** — attempt `avc1` (H.264) in `cv2.VideoWriter`
+2. **Fallback** — use `mp4v` if `avc1` unavailable
+3. **Post-processing** — if `ffmpeg` present (`shutil.which`), re-encode to H.264 with `yuv420p` + `+faststart`
 
 ---
 
 ### 4. Frame Dimension Constraint
 
-**Problem:** Zero-DCE++'s architecture uses a downsampling factor of 12 (`scale_factor=12`). Input frames with dimensions not divisible by 12 cause shape mismatches in the interpolation layers.
+**Problem:** Zero-DCE++'s `scale_factor=12` causes shape mismatches on non-divisible frame dimensions.
 
-**Solution:** Zero-padding applied before inference:
+**Solution:** Zero-padding before inference, cropped back after:
 
 ```python
 def pad_to_multiple(frame_rgb, factor=12):
@@ -359,85 +548,101 @@ def pad_to_multiple(frame_rgb, factor=12):
     return np.pad(frame_rgb, ((0, pad_h), (0, pad_w), (0, 0)))
 ```
 
-The padded region is cropped back to original dimensions after inference, leaving no padding artifacts in the output.
+---
+
+### 5. Docker libGL Dependency
+
+**Problem:** `opencv-python` links against `libGL.so.1`, absent in `python:3.11-slim`, causing `ImportError` at container startup.
+
+**Solution:** Switched to `opencv-python-headless` in `requirements.txt`. All functions used (`VideoCapture`, `VideoWriter`, `cvtColor`, `resize`) are fully available in the headless build.
 
 ---
 
-### 5. Memory Management in Streamlit
+### 6. Streamlit Memory Growth
 
-**Problem:** Streamlit re-runs the entire script on every user interaction. Storing video byte blobs in `st.session_state` for history playback caused unbounded RAM growth, with each 1080p session entry consuming 100–300 MB.
+**Problem:** Storing video byte blobs in `st.session_state` per history entry caused unbounded RAM growth (~100–300 MB per 1080p entry).
 
-**Solution:**
-- Session history capped at 5 entries (`MAX_HISTORY = 5`); oldest entries evicted automatically
-- Temporary processing directories (`tempfile.mkdtemp`) deleted immediately after video bytes are read into memory (`shutil.rmtree`)
-- Input temp files cleaned up on new upload (`os.unlink`)
+**Solution:** History capped at `MAX_HISTORY = 5`; oldest entry evicted. Temp dirs deleted with `shutil.rmtree` after bytes are read into memory.
 
 ---
 
-## Future Work
+## 18. Technologies Used
 
-| Enhancement | Expected Impact | Complexity |
+| Category | Technology | Version | Role |
+|---|---|---|---|
+| Deep Learning | PyTorch | ≥ 2.0 | Model training and ONNX export |
+| Model Format | ONNX | Opset 17 | Portable model serialisation |
+| Inference Runtime | ONNX Runtime | ≥ 1.17.0 | CPU inference engine |
+| Computer Vision | OpenCV (Headless) | ≥ 4.8.0 | Video I/O, colour conversion, codec handling |
+| Numerical Computing | NumPy | ≥ 1.24.0 | Frame-level array manipulation |
+| Web Interface | Streamlit | ≥ 1.35.0 | Interactive web application |
+| Video Processing | FFmpeg | Any | H.264 re-encoding for browser compatibility |
+| Containerisation | Docker | Any | Deployment packaging |
+| Language | Python | 3.11 | Implementation language |
+
+---
+
+## 19. Future Work
+
+| Area | Proposed Enhancement | Impact |
 |---|---|---|
-| **CUDA / TensorRT inference** | 12–60× FPS improvement at 1080p | Low (one-line provider change + driver install) |
-| **INT8 quantisation** | 2–4× CPU speedup, ~25% quality reduction | Medium (`onnxruntime.quantization`) |
-| **Optical-flow temporal consistency** | True motion-aware smoothing vs frame-independent EMA | High (requires optical flow estimation per frame pair) |
-| **Batch frame processing** | 4–8× throughput improvement via GPU parallelism | Medium (requires CUDA provider) |
-| **Video streaming (WebRTC)** | Real-time enhancement without upload | High (requires WebRTC + frame buffer) |
-| **Mobile deployment** | On-device enhancement (ONNX Mobile / CoreML) | High |
-| **Zero-DCE++ fine-tuning on SDSD** | Domain-specific quality improvement | Medium (requires paired training data) |
+| **GPU Acceleration** | `CUDAExecutionProvider` — one-line change | 12–60× FPS at 1080p |
+| **TensorRT INT8** | Quantised model via `onnxruntime.quantization` | 2–4× CPU speedup |
+| **Optical-Flow Smoothing** | Motion-aware warping instead of fixed EMA | True temporal consistency |
+| **Batch Processing** | Frame batching for GPU parallelism | Higher throughput |
+| **Video Streaming** | WebRTC real-time enhancement pipeline | Eliminates upload step |
+| **Mobile Deployment** | ONNX Mobile / CoreML on-device | Edge inference |
+| **Model Fine-tuning** | Zero-DCE++ fine-tuned on SDSD paired data | Domain-specific quality |
+| **REST API** | FastAPI endpoint for programmatic pipeline access | Integration capability |
+| **In-App Metrics** | Live PSNR / SSIM / NIQE computation inside the app | Objective quality feedback |
 
 ---
 
-## My Contributions
+## 20. My Contributions
 
-This project was completed as part of the Samsung PRISM research programme. My specific contributions:
+This project was completed as part of the Samsung PRISM research programme. Specific contributions:
 
 | Area | Contribution |
 |---|---|
-| **Model Evaluation** | Benchmarked Zero-DCE, Zero-DCE++, RUAS, SCI, PSENet, and URetinex-Net; selected Zero-DCE++ based on deployment constraints and parameter efficiency |
-| **ONNX Export** | Diagnosed broken ONNX export (missing `.onnx.data`); re-exported with dynamic axes using `torch.onnx.export` at opset 17; validated with `onnx.checker` and ONNX Runtime numerical parity checks |
-| **ONNX Runtime Integration** | Implemented `@st.cache_resource` session caching; configured `ORT_ENABLE_ALL` graph optimisation; added multi-file validation with clear user-facing error messages |
-| **Temporal Smoothing** | Designed and implemented EMA post-processing layer; empirically tuned α/β split (0.7/0.3) for optimal flicker suppression vs responsiveness trade-off |
-| **Video Processing Pipeline** | Built end-to-end pipeline: frame extraction → preprocessing → inference → smoothing → dual-output writing (enhanced + comparison side-by-side); implemented three-tier codec strategy for browser compatibility |
-| **Performance Profiling** | Identified ONNX inference as 88% of pipeline time; implemented UI throttling (1 update/second), pre-allocated comparison buffer, eliminated per-frame NumPy copies |
-| **Streamlit Application** | Built complete interactive web interface: tabbed result viewer, six-metric dashboard, interactive session history with full replay, robust error handling with expandable diagnostics |
-| **Deployment Workflow** | Containerised with Docker (`python:3.11-slim`); resolved `opencv-python` libGL dependency by switching to `opencv-python-headless`; added health check, upload size limits, and `ffmpeg` H.264 re-encoding |
+| **Model Evaluation** | Benchmarked Zero-DCE, Zero-DCE++, RUAS, SCI, PSENet, and URetinex-Net across PSNR, SSIM, LPIPS, Temporal Consistency; selected Zero-DCE++ based on results |
+| **ONNX Export** | Diagnosed broken ONNX export (missing `.onnx.data`); re-exported with dynamic axes at opset 17; validated with `onnx.checker` and numerical parity checks against PyTorch |
+| **ONNX Runtime Integration** | `@st.cache_resource` session caching; `ORT_ENABLE_ALL` graph optimisation; multi-file validation with clear user-facing error messages |
+| **Temporal Smoothing** | Designed and implemented EMA layer; empirically tuned α/β (0.7/0.3) for optimal flicker suppression |
+| **Video Processing Pipeline** | End-to-end pipeline: extraction → preprocessing → inference → smoothing → dual-output writing; three-tier codec strategy for browser compatibility |
+| **Performance Profiling** | Identified ONNX inference as 88% of pipeline time; implemented UI throttling, pre-allocated comparison buffer, eliminated per-frame allocations |
+| **Streamlit Application** | Complete interactive UI: tabbed results, six-metric dashboard, interactive session history with full replay, robust error handling |
+| **Deployment Workflow** | Docker containerisation; resolved `opencv-python` libGL issue; health check, upload limits, FFmpeg H.264 pipeline |
 
 ---
 
-## Interview Highlights
+## 21. Interview Highlights
 
 ### Problem
-
-Low-light video suffers from noise, poor contrast, and temporal flickering. Classical methods do not jointly address all three. The challenge was to deploy a neural enhancement solution on CPU-only hardware with no GPU.
+Low-light video suffers from noise, poor contrast, and temporal flickering. Classical methods do not jointly address all three. The constraint was CPU-only deployment with no GPU.
 
 ### Solution
-
-Zero-DCE++ was selected for its zero-reference learning (no paired data), extreme parameter efficiency (~10K params, 41 KB), and ONNX portability. Temporal flickering — not addressed by the base model — was resolved in the post-processing layer with an empirically tuned EMA filter.
+Zero-DCE++ selected for zero-reference learning, ~10K parameters (41 KB model), and ONNX portability. It achieved the highest PSNR (15.95 dB) in the project evaluation. Temporal flickering was resolved at the pipeline layer via EMA smoothing.
 
 ### Architecture
-
 ```
 Input Video → Frame Extraction → Pad/Normalise → ONNX Inference → EMA Smoothing → Video Reconstruction → Streamlit UI
 ```
 
-PyTorch weights are exported to ONNX once; ONNX Runtime handles all inference without PyTorch as a runtime dependency.
+PyTorch weights exported to ONNX once; ONNX Runtime handles all inference with no PyTorch runtime dependency.
 
 ### Deployment
-
-Deployed as a Docker container (`python:3.11-slim`) with `ffmpeg` for H.264 output. The critical fix was switching from `opencv-python` to `opencv-python-headless` to resolve a `libGL.so.1` missing dependency on Debian slim images — a non-obvious issue that would cause the container to fail at import time.
+Containerised with Docker (`python:3.11-slim`). Critical fix: switched `opencv-python` → `opencv-python-headless` to resolve `libGL.so.1` missing on Debian slim — a non-obvious failure that causes container crash at import time.
 
 ### Key Learnings
-
-1. **Zero-reference deep learning** can achieve competitive enhancement without paired training data
-2. **ONNX external data files** require both `.onnx` and `.onnx.data` to be co-located; ONNX Runtime resolves weight paths relative to the graph file
-3. **Temporal consistency** in video enhancement is an orthogonal problem to per-frame quality; it must be solved at the pipeline layer, not the model layer
-4. **Headless OpenCV** (`opencv-python-headless`) is the correct package for any Docker/server deployment; `opencv-python` requires X11 display libraries absent in slim Linux images
-5. **Streamlit session state** grows unboundedly if video byte blobs are stored per history entry without a cap — requires explicit eviction policy
+1. **Zero-reference deep learning** achieves competitive enhancement without paired training data
+2. **ONNX external data files** — both `.onnx` and `.onnx.data` must be co-located; ONNX Runtime resolves weight paths relative to the graph file
+3. **Temporal consistency** is orthogonal to per-frame quality — must be solved at the pipeline layer, not the model layer
+4. **Headless OpenCV** is the correct package for any Docker/server deployment; `opencv-python` requires X11 libraries absent in slim images
+5. **Streamlit session state** requires an explicit eviction policy when storing large byte blobs per history entry
 
 ---
 
-## Repository Notice
+## 22. Repository Notice
 
 > **This repository is intended for educational and portfolio purposes.**
 > Proprietary Samsung PRISM assets and source code are not included.
@@ -456,6 +661,14 @@ Deployed as a Docker container (`python:3.11-slim`) with `ffmpeg` for H.264 outp
 
 **Samsung PRISM · ClearVision · Low-Light Video Distortion Removal**
 
-*Built with Zero-DCE++ · ONNX Runtime · Streamlit · OpenCV · Docker*
+*Built with Zero-DCE++, ONNX Runtime, Streamlit, OpenCV, and Docker*
+
+[![Samsung PRISM](https://img.shields.io/badge/Samsung-PRISM-1428A0?style=flat-square&logo=samsung&logoColor=white)](https://www.samsungprism.com/)
+
+---
+
+**Acknowledgement:** This project builds on **Zero-DCE++** by Li, Guo, and Loy (IEEE TPAMI 2021).
+Official implementation: [github.com/Li-Chongyi/Zero-DCE_extension](https://github.com/Li-Chongyi/Zero-DCE_extension).
+The model is used strictly for academic and research purposes.
 
 </div>
